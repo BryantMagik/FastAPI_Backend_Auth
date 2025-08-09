@@ -1,6 +1,5 @@
 from pydantic import BaseModel
-from datetime import datetime
-from typing import Optional, Literal
+from datetime import date
 from uuid import UUID
 
 class LoginData(BaseModel):
@@ -11,3 +10,12 @@ class RegisterData(BaseModel):
     name: str
     username: str
     password: str
+    
+class SalesData(BaseModel):
+    date: date
+    cubos: int
+    escamas: int
+    pilet: int
+    euros: float
+    
+    

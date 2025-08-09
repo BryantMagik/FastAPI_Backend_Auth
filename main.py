@@ -44,8 +44,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # Rutas
-from routes import auth
+from routes import auth, sale
 app.include_router(auth.router)
+app.include_router(sale.router)
 
 # CORS 
 origins = [
