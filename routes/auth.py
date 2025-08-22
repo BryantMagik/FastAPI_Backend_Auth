@@ -22,7 +22,8 @@ async def login(data: LoginData, db: AsyncSession = Depends(get_db)):
         if not verify_password(data.password, user.password):
             raise HTTPException(status_code=401, detail="Credenciales inválidas")
 
-        access_token = create_access_token({"sub": user.name})
+        access_token = create_access_token({"sub": str(user.id)})
+        
         return {"access_token": access_token, "token_type": "bearer"}
     
     except SQLAlchemyError:

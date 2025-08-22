@@ -1,11 +1,13 @@
 from fastapi import Depends, HTTPException, status
-from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from dotenv import load_dotenv
 from app.models.user import User
 from app.database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from uuid import UUID
 
 import os
 
@@ -34,7 +36,7 @@ def verify_token(token: str):
     except JWTError as err:
         raise Exception(f"invalid token or expired: {err}")
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> User:
     try:
         payload = verify_token(token)
         user_id: str = payload.get("sub")
@@ -44,14 +46,16 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
                 detail="Token inválido: falta 'sub'",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+            
+        user_uuid = UUID(user_id)
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token inválido o expirado",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    user = db.query(User).filter(User.id == user_id).first()
+    result = await db.execute(select(User).where(User.id == user_uuid))
+    user = result.scalars().first()
     
     if not user:
         raise HTTPException(
